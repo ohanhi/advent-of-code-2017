@@ -1,34 +1,87 @@
 module Day04 exposing (..)
 
+import Char
+import Dict
 import Html exposing (Html)
 import Set
 
 
-phraseValid : String -> Bool
-phraseValid phrase =
-    let
-        words =
-            String.words phrase
+-- PART 1
 
+
+phraseValid1 : List String -> Bool
+phraseValid1 phrase =
+    let
         uniqueCount =
-            words
+            phrase
                 |> Set.fromList
                 |> Set.size
     in
-    List.length words == uniqueCount
+    List.length phrase == uniqueCount
 
 
-part1 : Int
-part1 =
+
+-- PART 2
+
+
+phraseValid2 : List String -> Bool
+phraseValid2 phrase =
+    let
+        hasAnagramFor list word =
+            list
+                |> List.filter ((/=) word)
+                |> List.any (isAnagramFor word)
+
+        isAnagramFor one two =
+            charCounts one == charCounts two
+
+        charCounts word =
+            word
+                |> String.toList
+                |> List.foldl frequency []
+    in
+    if phraseValid1 phrase then
+        phrase
+            |> List.any (hasAnagramFor phrase)
+            |> not
+    else
+        False
+
+
+frequency : Char -> List ( Char, Int ) -> List ( Char, Int )
+frequency curr acc =
+    let
+        dict =
+            Dict.fromList acc
+
+        updated =
+            case Dict.get curr dict of
+                Just n ->
+                    Dict.insert curr (n + 1) dict
+
+                Nothing ->
+                    Dict.insert curr 1 dict
+    in
+    Dict.toList updated
+
+
+
+-- Common
+
+
+validateWith : (List String -> Bool) -> Int
+validateWith f =
     myInput
         |> String.lines
-        |> List.filter phraseValid
+        |> List.map String.words
+        |> List.filter f
         |> List.length
 
 
 main : Html msg
 main =
-    { part1 = part1
+    { part1 = validateWith phraseValid1
+    , part2 = validateWith phraseValid2
     }
         |> toString
         |> Html.text
